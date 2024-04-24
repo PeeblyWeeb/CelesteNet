@@ -141,7 +141,9 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
             if (!Interactive || GrabCooldown > 0f || !CelesteNetClientModule.Settings.InGame.Interactions || IdleTag != null)
                 return;
 
-            Position = position;
+            TargetPosition = position;
+            CharacterPositionAtPacketReceived = position;
+            TimeSinceLastPacket = 0;
             Collidable = false;
 
             CelesteNetClient client = Context?.Client;
@@ -176,6 +178,10 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
             };
         }
 
+        Vector2 LastTargetPosition = Vector2.Zero;
+        Vector2 CharacterPositionAtPacketReceived = Vector2.Zero;
+        float TimeSinceLastPacket = 0;
+
         public override void Update() {
             lock (UpdateQueue) {
                 IsUpdating = true;
@@ -190,8 +196,32 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
                 return;
             }
 
-            float LerpSpeed = CelesteNetClientModule.Settings.Debug.LerpSpeed * Engine.RawDeltaTime;
-            Position = Vector2.Lerp(Position, TargetPosition, LerpSpeed);
+            if (TargetPosition != LastTargetPosition && Holdable.Holder == null) {
+                TimeSinceLastPacket = 0;
+                CharacterPositionAtPacketReceived = Position;
+            }
+
+            TimeSinceLastPacket += Engine.RawDeltaTime;
+
+            Vector2 Direction = TargetPosition - CharacterPositionAtPacketReceived;
+            Vector2 DirectionUnit = Vector2.Normalize(Direction);
+            double Dot = Vector2.Dot(DirectionUnit, Vector2.Normalize(Speed));
+
+            float PlayerUpdateRate = CelesteNetClientModule.Settings.Debug.PlayerUpdateRate;
+            bool PredictionEnabled = CelesteNetClientModule.Settings.InGame.VelocityPrediction;
+            bool ShouldPredict = PredictionEnabled && (TimeSinceLastPacket*0.75f) < PlayerUpdateRate && Holdable.Holder == null;
+
+            CharacterPositionAtPacketReceived += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
+            TargetPosition += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
+
+            if (Holdable.Holder == null && !double.IsNaN(Dot) && !double.IsInfinity(Dot))
+                Position = Vector2.Lerp(CharacterPositionAtPacketReceived, TargetPosition, Math.Clamp(TimeSinceLastPacket * PlayerUpdateRate, 0, 1));
+            else
+            {
+                Position = TargetPosition;
+            }
+
+            LastTargetPosition = TargetPosition;
 
             bool holdable = Interactive && GrabCooldown <= 0f && CelesteNetClientModule.Settings.InGame.Interactions && IdleTag == null;
 
@@ -337,7 +367,9 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
         public void UpdateGeneric(Vector2 pos, Vector2 scale, Color color, Facings facing, Vector2 speed) {
             if (Holdable.Holder == null)
+            {
                 TargetPosition = pos;
+            }
             if (scale.X > 0.0f) {
                 scale.X = Calc.Clamp(scale.X, 0.5f, 1.5f);
             } else {
