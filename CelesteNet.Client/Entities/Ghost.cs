@@ -176,6 +176,11 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
             };
         }
 
+        float Lerp(float start, float target, float percentage)
+        {
+            return start + (target - start) * Math.Clamp(percentage, 0, 1);
+        }
+
         public override void Update() {
             lock (UpdateQueue) {
                 IsUpdating = true;
@@ -190,10 +195,10 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
                 return;
             }
 
-            float LerpSpeed = (float)CelesteNetClientModule.Settings.Debug.LerpSpeed / 10f;
+            float LerpSpeed = CelesteNetClientModule.Settings.Debug.LerpSpeed * Engine.RawDeltaTime;
             Position = new Vector2(
-                (1 - LerpSpeed) * Position.X + LerpSpeed * TargetPosition.X, 
-                (1 - LerpSpeed) * Position.Y + LerpSpeed * TargetPosition.Y
+                Lerp(Position.X, TargetPosition.X, LerpSpeed),
+                Lerp(Position.Y, TargetPosition.Y, LerpSpeed)
             );
 
             bool holdable = Interactive && GrabCooldown <= 0f && CelesteNetClientModule.Settings.InGame.Interactions && IdleTag == null;

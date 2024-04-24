@@ -197,7 +197,7 @@ namespace Celeste.Mod.CelesteNet.Client {
 #endif
         public class DebugMenu {
             [SettingSubText("modoptions_celestenetclient_devonlyhint")]
-            [SettingRange(0, 10)]
+            [SettingRange(0, 1000)]
             public int LerpSpeed { get; set; } = 5;
 
             [SettingSubText("modoptions_celestenetclient_devonlyhint")]
