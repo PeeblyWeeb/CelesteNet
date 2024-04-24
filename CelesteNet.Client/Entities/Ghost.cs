@@ -20,6 +20,8 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
         public Vector2 Speed;
 
+        public Vector2 TargetPosition;
+
         public PlayerSprite Sprite;
         public PlayerHair Hair;
         public Leader Leader;
@@ -188,6 +190,12 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
                 return;
             }
 
+            float LerpSpeed = (float)CelesteNetClientModule.Settings.Debug.LerpSpeed / 10f;
+            Position = new Vector2(
+                (1 - LerpSpeed) * Position.X + LerpSpeed * TargetPosition.X, 
+                (1 - LerpSpeed) * Position.Y + LerpSpeed * TargetPosition.Y
+            );
+
             bool holdable = Interactive && GrabCooldown <= 0f && CelesteNetClientModule.Settings.InGame.Interactions && IdleTag == null;
 
             GrabCooldown -= Engine.RawDeltaTime;
@@ -332,7 +340,7 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
         public void UpdateGeneric(Vector2 pos, Vector2 scale, Color color, Facings facing, Vector2 speed) {
             if (Holdable.Holder == null)
-                Position = pos;
+                TargetPosition = pos;
             if (scale.X > 0.0f) {
                 scale.X = Calc.Clamp(scale.X, 0.5f, 1.5f);
             } else {
