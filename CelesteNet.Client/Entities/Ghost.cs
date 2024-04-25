@@ -181,6 +181,7 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
         Vector2 LastTargetPosition = Vector2.Zero;
         Vector2 CharacterPositionAtPacketReceived = Vector2.Zero;
         float TimeSinceLastPacket = 0;
+        Vector2 CurrentPredicted = Vector2.Zero;
 
         public override void Update() {
             lock (UpdateQueue) {
@@ -198,6 +199,7 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
             if (TargetPosition != LastTargetPosition && Holdable.Holder == null) {
                 TimeSinceLastPacket = 0;
+                CurrentPredicted = Vector2.Zero;
                 CharacterPositionAtPacketReceived = Position;
             }
 
@@ -209,16 +211,15 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
             float PlayerUpdateRate = CelesteNetClientModule.Settings.Debug.PlayerUpdateRate;
             bool PredictionEnabled = CelesteNetClientModule.Settings.InGame.VelocityPrediction;
-            bool ShouldPredict = PredictionEnabled && (TimeSinceLastPacket*0.75f) < PlayerUpdateRate && Holdable.Holder == null;
+            bool ShouldPredict = PredictionEnabled && TimeSinceLastPacket * 0.5f < 1 / PlayerUpdateRate;
 
-            CharacterPositionAtPacketReceived += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
-            TargetPosition += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
+            CurrentPredicted += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
 
             if (Holdable.Holder == null && !double.IsNaN(Dot) && !double.IsInfinity(Dot))
-                Position = Vector2.Lerp(CharacterPositionAtPacketReceived, TargetPosition, Math.Clamp(TimeSinceLastPacket * PlayerUpdateRate, 0, 1));
+                Position = Vector2.Lerp(CharacterPositionAtPacketReceived + CurrentPredicted, TargetPosition + CurrentPredicted, Math.Clamp(TimeSinceLastPacket * PlayerUpdateRate, 0, 1));
             else
             {
-                Position = TargetPosition;
+                Position = TargetPosition + CurrentPredicted;
             }
 
             LastTargetPosition = TargetPosition;

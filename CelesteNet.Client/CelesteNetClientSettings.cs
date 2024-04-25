@@ -198,7 +198,7 @@ namespace Celeste.Mod.CelesteNet.Client {
         public class DebugMenu {
             [SettingSubText("modoptions_celestenetclient_devonlyhint")]
             [SettingRange(0, 60)]
-            public int PlayerUpdateRate { get; set; } = 30;
+            public int PlayerUpdateRate { get; set; } = 20;
 
             [SettingSubText("modoptions_celestenetclient_devonlyhint")]
             public ConnectionType ConnectionType { get; set; } = ConnectionType.Auto;
