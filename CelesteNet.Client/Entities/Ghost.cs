@@ -207,7 +207,7 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
             Vector2 Direction = TargetPosition - CharacterPositionAtPacketReceived;
             Vector2 DirectionUnit = Vector2.Normalize(Direction);
-            double Dot = Vector2.Dot(DirectionUnit, Vector2.Normalize(Speed));
+            float Dot = Vector2.Dot(DirectionUnit, Vector2.Normalize(Speed));
 
             float PlayerUpdateRate = CelesteNetClientModule.Settings.Debug.PlayerUpdateRate;
             bool PredictionEnabled = CelesteNetClientModule.Settings.InGame.VelocityPrediction;
