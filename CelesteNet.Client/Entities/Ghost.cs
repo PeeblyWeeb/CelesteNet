@@ -215,7 +215,7 @@ namespace Celeste.Mod.CelesteNet.Client.Entities {
 
             CurrentPredicted += Speed * (ShouldPredict ? Engine.RawDeltaTime : 0);
 
-            if (Holdable.Holder == null && !double.IsNaN(Dot) && !double.IsInfinity(Dot))
+            if (Holdable.Holder == null && float.IsFinite(Dot))
                 Position = Vector2.Lerp(CharacterPositionAtPacketReceived + CurrentPredicted, TargetPosition + CurrentPredicted, Math.Clamp(TimeSinceLastPacket * PlayerUpdateRate, 0, 1));
             else
             {
